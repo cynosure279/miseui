@@ -1,13 +1,13 @@
 name: MiseUI Release
 
-# tag miseui-v* 触发：三平台桌面安装包 + Web 静态 + server Docker 镜像
 "on":
   push:
     tags:
       - "miseui-v*"
+  workflow_dispatch: {}
 
 concurrency:
-  group: ${ github.workflow }-${ github.ref }
+  group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
 env:
@@ -21,8 +21,11 @@ jobs:
       - name: Verify tag matches server version
         run: |
           set -euo pipefail
-          tag_ver="${ GITHUB_REF_NAME#miseui-v }"
-          cargo_ver="$(sed -n '/^\[package\]/,/^\[/p' server/Cargo.toml | grep -m1 '^version' | cut -d'"' -f2)"
+          tag_ver="${GITHUB_REF_NAME#miseui-v}"
+          cargo_ver="$(
+            sed -n '/^\[package\]/,/^\[/p' server/Cargo.toml | grep -m1 '^version' | cut -d'"' -f2 || true
+          )"
+          if [ -z "$cargo_ver" ]; then echo "::error::could not read server version"; exit 1; fi
           if [ "$tag_ver" != "$cargo_ver" ]; then
             echo "::error::tag v$tag_ver != server version $cargo_ver"
             exit 1
@@ -50,7 +53,9 @@ jobs:
       - name: Validate deb
         run: |
           set -euo pipefail
-          DEB="$(find gui/src-tauri/target/release/bundle/deb -maxdepth 1 -name '*.deb' -print -quit)"
+          DEB="$(
+            find gui/src-tauri/target/release/bundle/deb -maxdepth 1 -name '*.deb' -print -quit
+          )"
           [ -n "$DEB" ] || { echo "::error::no deb"; exit 1; }
           dpkg-deb --info "$DEB" | head -8
           lintian --fail-on error "$DEB" || { rc=$?; [ "$rc" -eq 2 ] && echo "warnings only" || exit $rc; }
@@ -123,12 +128,12 @@ jobs:
       - uses: docker/login-action@v3
         with:
           registry: ghcr.io
-          username: ${ github.actor }
-          password: ${ secrets.GITHUB_TOKEN }
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
       - id: meta
         uses: docker/metadata-action@v5
         with:
-          images: ghcr.io/${ github.repository }/miseui-server
+          images: ghcr.io/${{ github.repository }}/miseui-server
           tags: |
             type=semver,pattern={{version}}
             type=sha
@@ -143,7 +148,7 @@ jobs:
       - name: Verify container boots
         run: |
           set -euo pipefail
-          c="miseui-server-ci-${ github.run_id }"
+          c="miseui-server-ci-${{ github.run_id }}"
           docker rm -f "$c" >/dev/null 2>&1 || true
           docker run -d --name "$c" -e MISEUI_MISE_BIN=/bin/true miseui-server:ci-check
           trap 'docker rm -f "$c" >/dev/null 2>&1 || true' EXIT
@@ -155,8 +160,8 @@ jobs:
         with:
           context: server
           push: true
-          tags: ${ steps.meta.outputs.tags }
-          labels: ${ steps.meta.outputs.labels }
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
 
   release:
