@@ -21,9 +21,8 @@ async fn start_server(token: &str, fault: bool) -> ServerGuard {
 
 async fn start_server_with_env(token: &str, fault: bool, extra_key: &str, extra_val: &str) -> ServerGuard {
     let dir = tempfile::tempdir().unwrap();
-    // Windows cannot exec a .sh directly: route through a .cmd wrapper using Git Bash.
-    let fixture_name = if cfg!(windows) { "fake-mise.cmd" } else { "fake-mise.sh" };
-    let fixture = Path::new(env!("CARGO_MANIFEST_DIR")).join("tests").join(fixture_name);
+    // Use the compiled fake-mise binary (cross-platform; Windows cannot exec .sh/.cmd directly).
+    let fixture = Path::new(env!("CARGO_BIN_EXE_fake-mise")).to_path_buf();
     let port_file = dir.path().join("port");
     let log_file = dir.path().join("fake-mise.log");
     let mut cmd = Command::new(MISE_BIN);
