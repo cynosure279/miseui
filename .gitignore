@@ -4,3 +4,5 @@ target/
 *.local
 .DS_Store
 .miseui-trash/
+.ci-tmp/
+.ci-node-tmp/
