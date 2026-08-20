@@ -1,6 +1,6 @@
 name: MiseUI Release
 
-# tag miseui-v* 触发：桌面三平台 + Web 静态 + server Docker 镜像
+# tag miseui-v* 触发：三平台桌面安装包 + Web 静态 + server Docker 镜像
 "on":
   push:
     tags:
@@ -21,13 +21,13 @@ jobs:
       - name: Verify tag matches server version
         run: |
           set -euo pipefail
-          tag_ver="${GITHUB_REF_NAME#miseui-v}"
+          tag_ver="${ GITHUB_REF_NAME#miseui-v }"
           cargo_ver="$(sed -n '/^\[package\]/,/^\[/p' server/Cargo.toml | grep -m1 '^version' | cut -d'"' -f2)"
           if [ "$tag_ver" != "$cargo_ver" ]; then
-            echo "::error::tag $tag_ver != cargo $cargo_ver"
+            echo "::error::tag v$tag_ver != server version $cargo_ver"
             exit 1
           fi
-          echo "verified :: $tag_ver"
+          echo "verified: v$tag_ver"
 
   build-linux:
     runs-on: ubuntu-latest
@@ -37,18 +37,80 @@ jobs:
       - uses: dtolnay/rust-toolchain@master
         with: { toolchain: stable }
       - uses: Swatinem/rust-cache@v2
+        with: { key: miseui-linux }
       - uses: oven-sh/setup-bun@v2
         with: { bun-version: 1.3.14 }
       - run: sudo apt-get update && sudo DEBIAN_FRONTEND=noninteractive apt-get install -y libwebkit2gtk-4.1-dev libayatana-appindicator3-dev librsvg2-dev libssl-dev libxdo-dev patchelf lintian
       - run: bun install --frozen-lockfile
         working-directory: gui
-      # 桌面 deb（需 src-tauri 就绪；M4 后启用）+ 仅 web 先产出
-      - name: build web
-        run: bun run build --prefix gui || bun --cwd gui run build
+      - run: bun run build
+        working-directory: gui
+      - run: bunx tauri build --bundles deb
+        working-directory: gui
+      - name: Validate deb
+        run: |
+          set -euo pipefail
+          DEB="$(find gui/src-tauri/target/release/bundle/deb -maxdepth 1 -name '*.deb' -print -quit)"
+          [ -n "$DEB" ] || { echo "::error::no deb"; exit 1; }
+          dpkg-deb --info "$DEB" | head -8
+          lintian --fail-on error "$DEB" || { rc=$?; [ "$rc" -eq 2 ] && echo "warnings only" || exit $rc; }
+          PKG="$(dpkg-deb -f "$DEB" Package)"
+          sudo dpkg -i "$DEB" && dpkg -s "$PKG" >/dev/null
+          BIN="$(dpkg -L "$PKG" | grep '^/usr/bin/' | head -n1)"
+          [ -x "$BIN" ] && echo "bin ok: $BIN"
+          sudo dpkg -r "$PKG" && echo "uninstall ok"
       - uses: actions/upload-artifact@v4
         with:
-          name: miseui-web
-          path: gui/dist
+          name: miseui-linux
+          path: |
+            gui/src-tauri/target/release/bundle/deb/*.deb
+            gui/dist
+          if-no-files-found: error
+
+  build-macos:
+    runs-on: macos-latest
+    needs: check-version
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@master
+        with: { toolchain: stable }
+      - uses: Swatinem/rust-cache@v2
+        with: { key: miseui-macos }
+      - uses: oven-sh/setup-bun@v2
+        with: { bun-version: 1.3.14 }
+      - run: bun install --frozen-lockfile
+        working-directory: gui
+      - run: bun run build
+        working-directory: gui
+      - run: bunx tauri build --bundles app,dmg
+        working-directory: gui
+      - uses: actions/upload-artifact@v4
+        with:
+          name: miseui-macos
+          path: gui/src-tauri/target/release/bundle/dmg/*.dmg
+          if-no-files-found: error
+
+  build-windows:
+    runs-on: windows-latest
+    needs: check-version
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@master
+        with: { toolchain: stable }
+      - uses: Swatinem/rust-cache@v2
+        with: { key: miseui-windows }
+      - uses: oven-sh/setup-bun@v2
+        with: { bun-version: 1.3.14 }
+      - run: bun install --frozen-lockfile
+        working-directory: gui
+      - run: bun run build
+        working-directory: gui
+      - run: bunx tauri build --bundles nsis
+        working-directory: gui
+      - uses: actions/upload-artifact@v4
+        with:
+          name: miseui-windows
+          path: gui/src-tauri/target/release/bundle/nsis/*.exe
           if-no-files-found: error
 
   build-server-image:
@@ -78,14 +140,14 @@ jobs:
           tags: miseui-server:ci-check
           cache-from: type=gha
           cache-to: type=gha,mode=max
-      - name: Verify container healthcheck
+      - name: Verify container boots
         run: |
           set -euo pipefail
           c="miseui-server-ci-${ github.run_id }"
           docker rm -f "$c" >/dev/null 2>&1 || true
           docker run -d --name "$c" -e MISEUI_MISE_BIN=/bin/true miseui-server:ci-check
           trap 'docker rm -f "$c" >/dev/null 2>&1 || true' EXIT
-          sleep 2
+          sleep 3
           docker ps --filter name="$c" | grep -q Up
           echo "container up"
       - name: Push verified image
@@ -99,7 +161,7 @@ jobs:
 
   release:
     runs-on: ubuntu-latest
-    needs: [build-linux, build-server-image]
+    needs: [build-linux, build-macos, build-windows, build-server-image]
     permissions: { contents: write }
     steps:
       - uses: actions/download-artifact@v4
