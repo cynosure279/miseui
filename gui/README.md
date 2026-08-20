@@ -22,3 +22,7 @@ React 18 + TypeScript + Vite（bun）；手写 CSS 令牌系统（主题注册�
 ## 主题（小风格）
 
 主题注册表：mise（默认·质感）、glass-dark（玻璃拟态深色）、hc（高对比极简）、material-you（动态取色）。CSS 变量 + data-theme / data-theme-id 全量热替换；全局「减少动画」开关。
+
+## Releases
+
+Releases are built by the GitHub Actions release workflow when a `miseui-v*` tag is pushed (desktop bundles, web static and the server Docker image).
