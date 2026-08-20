@@ -75,7 +75,7 @@ async fn t_tools_object_shape_normalized() {
     let node = tools.iter().find(|t| t["name"] == "node").expect("node present");
     assert_eq!(node["version"], "22.11.0");
     assert_eq!(node["installed"], true);
-    assert_eq!(node["source"], format!("{}/mise.toml", g.dir.path().display()));
+    assert_eq!(node["source"], format!("{}/mise.toml", proj_fwd(&g)));
 }
 
 fn auth_client(token: &str) -> Client {
@@ -98,6 +98,11 @@ async fn get_json(client: &Client, url: &str) -> (StatusCode, Value) {
 
 fn proj(g: &ServerGuard) -> PathBuf {
     g.dir.path().to_path_buf()
+}
+
+/// Forward-slash form of the temp project path (matches the fixture on every OS).
+fn proj_fwd(g: &ServerGuard) -> String {
+    g.dir.path().to_string_lossy().into_owned().replace('\\', "/")
 }
 
 #[tokio::test]
@@ -139,7 +144,7 @@ async fn t_env_path_analysis() {
     let (s, b) = get_json(&c, &url).await;
     assert_eq!(s, StatusCode::OK);
     let entries = b["entries"].as_array().unwrap();
-    let shims_dir = format!("{}/shims", proj(&g).display());
+    let shims_dir = format!("{}/shims", proj_fwd(&g));
     let shims = entries.iter().find(|e| e["path"] == shims_dir).cloned().unwrap();
     assert_eq!(shims["is_shim"], true);
     assert_eq!(shims["missing"], false);
@@ -178,14 +183,17 @@ async fn t_config_list_and_raw() {
     assert_eq!(s, StatusCode::OK);
     assert_eq!(b["configs"].as_array().unwrap().len(), 2);
 
-    let raw = format!("{}/api/v1/config/raw?cwd={}&file={}", g.base, p.display(), p.join("mise.toml").display());
+    let p_fwd = proj_fwd(&g);
+    let mise_toml = format!("{}/mise.toml", p_fwd);
+    let raw = format!("{}/api/v1/config/raw?cwd={}&file={}", g.base, p.display(), mise_toml);
     let (s, b) = get_json(&c, &raw).await;
     assert_eq!(s, StatusCode::OK);
     assert!(b["content"].as_str().unwrap().contains("HELLO"));
 
     let secret = p.join("secret.toml");
     std::fs::write(&secret, "secret").unwrap();
-    let raw2 = format!("{}/api/v1/config/raw?cwd={}&file={}", g.base, p.display(), secret.display());
+    let secret_toml = format!("{}/secret.toml", p_fwd);
+    let raw2 = format!("{}/api/v1/config/raw?cwd={}&file={}", g.base, p.display(), secret_toml);
     let (s, b) = get_json(&c, &raw2).await;
     assert_eq!(s, StatusCode::FORBIDDEN);
     assert_eq!(b["code"], "file_not_allowed");

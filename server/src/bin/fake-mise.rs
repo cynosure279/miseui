@@ -10,8 +10,12 @@ fn main() -> std::process::ExitCode {
         .skip(1)
         .map(|a| a.to_string_lossy().into_owned())
         .collect();
+    // Keep JSON valid on Windows: forward slashes are accepted by Path and JSON alike.
+    let norm = |p: String| p.replace('\\', "/");
     let project = env::var("FAKE_MISE_PROJECT").unwrap_or_else(|_| ".".into());
+    let project = norm(project);
     let home = env::var("HOME").unwrap_or_else(|_| ".".into());
+    let home = norm(home);
     let env_name = env::var("MISE_ENV").unwrap_or_default();
     let ls_mode = env::var("FAKE_MISE_LS_MODE").unwrap_or_default();
     let fault = env::var("FAKE_MISE_FAULT").is_ok();
