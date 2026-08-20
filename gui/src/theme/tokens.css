@@ -1,0 +1,283 @@
+/* ============================================================
+   MiseUI Design Tokens — from mimo v2.5 design spec (gui/design/design-spec.md)
+   质感设计：MD3 为灵感，保留质感精髓（分层深度/柔材料/物理动效/克制排印/语义色）
+   ============================================================ */
+
+:root {
+  /* ---- colors: light (default) ---- */
+  --color-bg: #f5f5f0;
+  --color-surface: #ffffff;
+  --color-surface-alt: #fafaf6;
+  --color-elevation-1: rgba(0, 0, 0, 0.04);
+  --color-elevation-2: rgba(0, 0, 0, 0.08);
+  --color-elevation-3: rgba(0, 0, 0, 0.14);
+  --color-primary: #00a352;
+  --color-primary-hover: #008f48;
+  --color-primary-subtle: #e6f5ee;
+  --color-accent: #2563eb;
+  --color-ok: #16a34a;
+  --color-warn: #d97706;
+  --color-error: #dc2626;
+  --color-info: #2563eb;
+  --color-text: #1a1a1a;
+  --color-text-secondary: #6b7280;
+  --color-text-disabled: #9ca3af;
+  --color-text-on-primary: #ffffff;
+  --color-text-on-ok: #ffffff;
+  --color-text-on-error: #ffffff;
+  --color-border: #e5e7eb;
+  --color-border-strong: #d1d5db;
+  --color-overlay: rgba(15, 17, 21, 0.4);
+  --color-focus: rgba(0, 163, 82, 0.5);
+  --color-scrollbar: #d1d5db;
+
+  /* semantic tint surfaces */
+  --color-ok-subtle: #ecfdf3;
+  --color-warn-subtle: #fffbeb;
+  --color-error-subtle: #fef2f2;
+  --color-info-subtle: #eff6ff;
+  --color-shell: #9ca3af;      /* shell-inherited origin accent */
+  --color-system: #d97706;     /* system origin accent */
+
+  /* ---- radius ---- */
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+  --radius-full: 9999px;
+
+  /* ---- spacing (8pt grid) ---- */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-12: 48px;
+  --space-16: 64px;
+
+  /* ---- typography ---- */
+  --font-sans: "Inter", "Noto Sans SC", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: "JetBrains Mono", "SFMono-Regular", "Fira Code", ui-monospace, monospace;
+  --font-size-xs: 11px;
+  --font-size-sm: 13px;
+  --font-size-md: 15px;
+  --font-size-lg: 18px;
+  --font-size-xl: 24px;
+  --font-size-2xl: 32px;
+  --font-weight-regular: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+  --line-height-tight: 1.25;
+  --line-height-normal: 1.5;
+  --line-height-relaxed: 1.75;
+
+  /* ---- shadow elevation ---- */
+  --shadow-0: none;
+  --shadow-1: 0 1px 2px var(--color-elevation-1), 0 1px 3px var(--color-elevation-1);
+  --shadow-2: 0 2px 6px var(--color-elevation-1), 0 4px 12px var(--color-elevation-2);
+  --shadow-3: 0 4px 12px var(--color-elevation-2), 0 8px 24px var(--color-elevation-3);
+  --shadow-4: 0 8px 24px var(--color-elevation-3), 0 16px 48px var(--color-elevation-3);
+
+  /* ---- motion ---- */
+  --motion-duration-instant: 80ms;
+  --motion-duration-fast: 150ms;
+  --motion-duration-normal: 250ms;
+  --motion-duration-slow: 400ms;
+  --motion-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --motion-ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --motion-ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+
+  /* ---- glass / material ---- */
+  --glass-blur: 16px;
+  --glass-blur-heavy: 32px;
+  --glass-bg-light: rgba(255, 255, 255, 0.72);
+  --glass-bg-dark: rgba(26, 29, 36, 0.78);
+  --glass-border-light: rgba(255, 255, 255, 0.35);
+  --glass-border-dark: rgba(255, 255, 255, 0.12);
+  --glass-grain-opacity: 0.03;
+
+  /* ---- borders / z-index / extras (review additions) ---- */
+  --border-width-1: 1px;
+  --border-width-2: 2px;
+  --z-base: 0;
+  --z-dropdown: 100;
+  --z-overlay: 200;
+  --z-modal: 300;
+  --z-toast: 400;
+}
+
+/* ============ dark (default theme's dark mode) ============ */
+[data-theme="dark"] {
+  --color-bg: #0f1115;
+  --color-surface: #1a1d24;
+  --color-surface-alt: #22252e;
+  --color-elevation-1: rgba(255, 255, 255, 0.05);
+  --color-elevation-2: rgba(255, 255, 255, 0.09);
+  --color-elevation-3: rgba(255, 255, 255, 0.15);
+  --color-primary: #00c964;
+  --color-primary-hover: #00db6e;
+  --color-primary-subtle: rgba(0, 201, 100, 0.12);
+  --color-accent: #60a5fa;
+  --color-ok: #22c55e;
+  --color-warn: #f59e0b;
+  --color-error: #ef4444;
+  --color-info: #60a5fa;
+  --color-text: #e8eaed;
+  --color-text-secondary: #9ca3af;
+  --color-text-disabled: #6b7280;
+  --color-text-on-primary: #0a1a0f;
+  --color-text-on-ok: #0a1a0f;
+  --color-text-on-error: #ffffff;
+  --color-border: #2a2d36;
+  --color-border-strong: #3a3d46;
+  --color-overlay: rgba(0, 0, 0, 0.55);
+  --color-focus: rgba(0, 201, 100, 0.45);
+  --color-scrollbar: #3a3d46;
+  --color-ok-subtle: rgba(34, 197, 94, 0.12);
+  --color-warn-subtle: rgba(245, 158, 11, 0.12);
+  --color-error-subtle: rgba(239, 68, 68, 0.12);
+  --color-info-subtle: rgba(96, 165, 250, 0.12);
+  --color-shell: #6b7280;
+  --color-system: #f59e0b;
+}
+
+/* ============ extra themes (theme-id overrides) ============ */
+/* 玻璃液态（Glass）主题：浅/深两套表面令牌，配合前端极光层 + backdrop-blur 使用 */
+[data-theme-id="glass-dark"][data-theme="light"] {
+  --color-bg: #d7e0ee;
+  /* 浅色玻璃：面板提高不透明度（0.82）保证可读性，冷调描边 + 顶部高光 */
+  --glass-sidebar: rgba(255, 255, 255, 0.5);
+  --glass-surface: rgba(255, 255, 255, 0.66);
+  --glass-surface-strong: rgba(255, 255, 255, 0.84);
+  --glass-input: rgba(255, 255, 255, 0.7);
+  --glass-blur: 20px;
+  --glass-saturate: 165%;
+  --glass-border: rgba(190, 210, 238, 0.75);
+  --glass-shadow: 0 8px 28px rgba(40, 60, 90, 0.16), inset 0 1px 0 rgba(255, 255, 255, 0.95), inset 0 0 0 1px rgba(255,255,255,0.5);
+  --color-border: rgba(40, 60, 90, 0.12);
+  --color-border-strong: rgba(40, 60, 90, 0.22);
+  /* 浅色极光：饱和度/亮度提升，浅面板后依旧可辨 */
+  --aurora-1: rgba(8, 190, 108, 0.5);
+  --aurora-2: rgba(96, 150, 250, 0.45);
+  --aurora-3: rgba(250, 186, 70, 0.38);
+}
+[data-theme-id="glass-dark"][data-theme="dark"] {
+  --color-bg: #090c12;
+  --glass-sidebar: rgba(14, 18, 26, 0.45);
+  --glass-surface: rgba(20, 26, 36, 0.5);
+  --glass-surface-strong: rgba(30, 38, 50, 0.66);
+  --glass-input: rgba(18, 24, 33, 0.5);
+  --glass-blur: 22px;
+  --glass-saturate: 170%;
+  --glass-border: rgba(255, 255, 255, 0.14);
+  /* 深色玻璃：边缘高光 + 内散射（蓝光） */
+  --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.14), inset 0 0 56px rgba(96, 140, 236, 0.06);
+  --color-border: rgba(255, 255, 255, 0.09);
+  --color-border-strong: rgba(255, 255, 255, 0.18);
+  --aurora-1: rgba(0, 201, 100, 0.46);
+  --aurora-2: rgba(96, 165, 250, 0.38);
+  --aurora-3: rgba(224, 160, 60, 0.3);
+}
+[data-theme-id="glass-dark"][data-theme="dark"] {
+  --color-bg: #090c12;
+  --glass-sidebar: rgba(16, 20, 28, 0.5);
+  --glass-surface: rgba(24, 29, 39, 0.55);
+  --glass-surface-strong: rgba(32, 38, 50, 0.7);
+  --glass-input: rgba(22, 27, 37, 0.55);
+  --glass-blur: 26px;
+  --glass-saturate: 190%;
+  --glass-border: rgba(255, 255, 255, 0.15);
+  --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.42), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  --color-border: rgba(255, 255, 255, 0.09);
+  --color-border-strong: rgba(255, 255, 255, 0.18);
+  --aurora-1: rgba(0, 201, 100, 0.5);
+  --aurora-2: rgba(96, 165, 250, 0.42);
+  --aurora-3: rgba(224, 160, 60, 0.34);
+}
+/* 高对比主题：浅/深两套（跟随明暗开关；无色弱、无阴影、强边框） */
+[data-theme-id="hc"][data-theme="light"] {
+  --color-bg: #ffffff;
+  --color-surface: #ffffff;
+  --color-surface-alt: #f0f0f0;
+  --color-text: #000000;
+  --color-text-secondary: #1f2937;
+  --color-text-disabled: #4b5563;
+  --color-primary: #00703a;
+  --color-primary-hover: #00592e;
+  --color-primary-subtle: #d9f4e4;
+  --color-accent: #1d4ed8;
+  --color-ok: #15803d;
+  --color-warn: #b45309;
+  --color-error: #b91c1c;
+  --color-info: #1d4ed8;
+  --color-text-on-primary: #ffffff;
+  --color-text-on-ok: #ffffff;
+  --color-text-on-error: #ffffff;
+  --color-border: #000000;
+  --color-border-strong: #000000;
+  --color-focus: #000000;
+  --color-shell: #111827;
+  --color-system: #92400e;
+  --color-ok-subtle: #e7f6ec;
+  --color-warn-subtle: #fff4e0;
+  --color-error-subtle: #ffe9e9;
+  --color-info-subtle: #e3edff;
+  --shadow-1: none;
+  --shadow-2: none;
+  --shadow-3: none;
+}
+[data-theme-id="hc"][data-theme="dark"] {
+  --color-bg: #000000;
+  --color-surface: #0a0a0a;
+  --color-surface-alt: #141414;
+  --color-text: #ffffff;
+  --color-text-secondary: #e5e7eb;
+  --color-text-disabled: #9ca3af;
+  --color-primary: #00ff80;
+  --color-primary-hover: #57ffa8;
+  --color-primary-subtle: #00331a;
+  --color-accent: #7dd3fc;
+  --color-ok: #4ade80;
+  --color-warn: #fbbf24;
+  --color-error: #f87171;
+  --color-info: #7dd3fc;
+  --color-text-on-primary: #001a0f;
+  --color-text-on-ok: #001a0f;
+  --color-text-on-error: #000000;
+  --color-border: #ffffff;
+  --color-border-strong: #ffffff;
+  --color-focus: #ffffff;
+  --color-shell: #ffffff;
+  --color-system: #fbbf24;
+  --color-ok-subtle: rgba(74, 222, 128, 0.16);
+  --color-warn-subtle: rgba(251, 191, 36, 0.16);
+  --color-error-subtle: rgba(248, 113, 113, 0.16);
+  --color-info-subtle: rgba(125, 211, 252, 0.16);
+  --shadow-1: none;
+  --shadow-2: none;
+  --shadow-3: none;
+}
+/* Material You: seed-driven OKLCH ramp, default to mise green */
+[data-theme-id="material-you"] {
+  --color-primary: color-mix(in oklch, var(--muy-seed, #00a352) 88%, #ffffff 12%);
+  --color-primary-hover: color-mix(in oklch, var(--muy-seed, #00a352) 96%, #000000 4%);
+  --color-primary-subtle: color-mix(in oklch, var(--muy-seed, #00a352) 14%, transparent);
+}
+
+/* ============ reduce motion ============ */
+[data-reduce-motion="on"] *,
+[data-reduce-motion="on"] *::before,
+[data-reduce-motion="on"] *::after {
+  animation-duration: 0ms !important;
+  transition-duration: 0ms !important;
+}
+[data-reduce-motion="on"] [data-cascade] {
+  animation: none !important;
+}
+[data-reduce-motion="on"] .pulse {
+  animation: none !important;
+}

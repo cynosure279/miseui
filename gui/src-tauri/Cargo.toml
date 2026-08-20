@@ -1,0 +1,17 @@
+[package]
+name = "miseui"
+version = "0.1.0"
+edition = "2021"
+description = "MiseUI — Graphical User Interface for mise"
+license = "MIT"
+
+# Standalone: keeps out of the parent mise cargo workspace (same pattern as server/).
+[workspace]
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+tauri = { version = "2", features = [] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
