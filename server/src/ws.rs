@@ -78,14 +78,9 @@ async fn run_task(socket: &mut WebSocket, st: &AppState, task: &str, args: &[Str
         let tx = tx.clone();
         tokio::spawn(async move {
             let mut lines = BufReader::new(stdout).lines();
-            loop {
-                match lines.next_line().await {
-                    Ok(Some(line)) => {
-                        if tx.send(format!("out|{line}")).await.is_err() {
-                            break;
-                        }
-                    }
-                    _ => break,
+            while let Ok(Some(line)) = lines.next_line().await {
+                if tx.send(format!("out|{line}")).await.is_err() {
+                    break;
                 }
             }
         });
@@ -94,14 +89,9 @@ async fn run_task(socket: &mut WebSocket, st: &AppState, task: &str, args: &[Str
         let tx = tx.clone();
         tokio::spawn(async move {
             let mut lines = BufReader::new(stderr).lines();
-            loop {
-                match lines.next_line().await {
-                    Ok(Some(line)) => {
-                        if tx.send(format!("err|{line}")).await.is_err() {
-                            break;
-                        }
-                    }
-                    _ => break,
+            while let Ok(Some(line)) = lines.next_line().await {
+                if tx.send(format!("err|{line}")).await.is_err() {
+                    break;
                 }
             }
         });

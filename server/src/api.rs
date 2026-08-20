@@ -192,7 +192,7 @@ fn parse_env_json(v: Value) -> Vec<EnvVariable> {
             let get = |key: &str| o.get(key).and_then(|x| x.as_str()).map(|s| s.to_string());
             vars.push(EnvVariable {
                 key: k.clone(),
-                value: get("value").unwrap_or_else(|| String::new()),
+                value: get("value").unwrap_or_default(),
                 source: get("source"),
                 tool: get("tool"),
                 raw: get("raw"),
