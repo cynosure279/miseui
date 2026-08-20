@@ -1,6 +1,7 @@
 // fake-mise: deterministic mise CLI fixture, implemented as a real Rust binary so
 // integration tests run on every platform (Windows cannot exec .sh/.cmd directly).
-// Behavior mirrors server/tests/fake-mise.sh; driven by env vars.
+// Driven by env vars; JSON built with serde_json to avoid escaping pitfalls.
+use serde_json::json;
 use std::env;
 use std::fs::OpenOptions;
 use std::io::Write;
@@ -12,10 +13,8 @@ fn main() -> std::process::ExitCode {
         .collect();
     // Keep JSON valid on Windows: forward slashes are accepted by Path and JSON alike.
     let norm = |p: String| p.replace('\\', "/");
-    let project = env::var("FAKE_MISE_PROJECT").unwrap_or_else(|_| ".".into());
-    let project = norm(project);
-    let home = env::var("HOME").unwrap_or_else(|_| ".".into());
-    let home = norm(home);
+    let project = norm(env::var("FAKE_MISE_PROJECT").unwrap_or_else(|_| ".".into()));
+    let home = norm(env::var("HOME").unwrap_or_else(|_| ".".into()));
     let env_name = env::var("MISE_ENV").unwrap_or_default();
     let ls_mode = env::var("FAKE_MISE_LS_MODE").unwrap_or_default();
     let fault = env::var("FAKE_MISE_FAULT").is_ok();
@@ -32,49 +31,68 @@ fn main() -> std::process::ExitCode {
         return std::process::ExitCode::from(1);
     }
 
-    let cmd = first;
-    match cmd {
-        "--version" => {
-            println!("2026.8.1-fake");
-        }
+    let proj_toml = format!("{project}/mise.toml");
+    let global_toml = format!("{home}/.config/mise/config.toml");
+
+    match first {
+        "--version" => println!("2026.8.1-fake"),
         "env" => {
             let node_env = if env_name == "staging" { "staging" } else { "development" };
+            let sep = if cfg!(windows) { ";" } else { ":" };
+            let path_val = format!("{project}/shims{sep}/usr/bin{sep}{project}/shims{sep}/usr/bin{sep}/nonexistent-xyz");
             if args.iter().any(|a| a == "--json-extended") {
-                println!(
-                    "{{\"PATH\":{{\"value\":\"{p}/shims:/usr/bin:{p}/shims:/usr/bin:/nonexistent-xyz\",\"source\":\"{p}/mise.toml\"}},\"NODE_ENV\":{{\"value\":\"{ne}\",\"source\":\"{p}/mise.toml\"}},\"GLOBAL_KEY\":{{\"value\":\"global-val\",\"source\":\"{h}/.config/mise/config.toml\"}},\"TOOL_VAR\":{{\"value\":\"node-tool-val\",\"tool\":\"node\",\"source\":\"{p}/mise.toml\"}},\"INHERITED_VAR\":{{\"value\":\"from-shell\"}}}}",
-                    p = project, h = home, ne = node_env
-                );
+                let v = json!({
+                    "PATH": {"value": path_val, "source": proj_toml},
+                    "NODE_ENV": {"value": node_env, "source": proj_toml},
+                    "GLOBAL_KEY": {"value": "global-val", "source": global_toml},
+                    "TOOL_VAR": {"value": "node-tool-val", "tool": "node", "source": proj_toml},
+                    "INHERITED_VAR": {"value": "from-shell"},
+                });
+                println!("{v}");
             } else if args.iter().any(|a| a == "--json") {
-                println!("{{\"PATH\":\"{p}/shims:/usr/bin\",\"NODE_ENV\":\"{ne}\"}}", p = project, ne = node_env);
+                let v = json!({"PATH": path_val, "NODE_ENV": node_env});
+                println!("{v}");
             } else {
-                println!("PATH={p}/shims:/usr/bin", p = project);
+                println!("PATH={path_val}");
             }
         }
         "doctor" => {
             if args.iter().any(|a| a == "--json") {
-                println!(
-                    "{{\"version\":\"2026.8.1-fake\",\"os\":{{\"name\":\"Linux\",\"version\":\"6.x\"}},\"shell\":{{\"name\":\"bash\",\"path\":\"/bin/bash\"}},\"settings\":{{}},\"env_files\":[\"{p}/.env\"],\"config_files\":[\"{p}/mise.toml\",\"{h}/.config/mise/config.toml\"],\"plugins\":[{{\"name\":\"node\",\"installed\":true}}],\"tools\":[{{\"name\":\"node\",\"version\":\"22.11.0\",\"source\":\"{p}/mise.toml\",\"requested_version\":\"22\",\"installed\":true}}],\"warnings\":[],\"problems\":[]}}",
-                    p = project, h = home
-                );
+                let v = json!({
+                    "version": "2026.8.1-fake",
+                    "os": {"name": "Linux", "version": "6.x"},
+                    "shell": {"name": "bash", "path": "/bin/bash"},
+                    "settings": {},
+                    "env_files": [format!("{project}/.env")],
+                    "config_files": [proj_toml, global_toml],
+                    "plugins": [{"name": "node", "installed": true}],
+                    "tools": [{"name": "node", "version": "22.11.0", "source": proj_toml, "requested_version": "22", "installed": true}],
+                    "warnings": [],
+                    "problems": [],
+                });
+                println!("{v}");
             } else {
                 println!("mise doctor");
             }
         }
         "config" => {
-            println!("[{{\"path\":\"{p}/mise.toml\"}},{{\"path\":\"{h}/.config/mise/config.toml\"}}]", p = project, h = home);
+            let v = json!([{"path": proj_toml}, {"path": global_toml}]);
+            println!("{v}");
         }
         "ls" => {
             if args.iter().any(|a| a == "--json") {
                 if ls_mode == "object" {
-                    println!(
-                        "{{\"node\":[{{\"version\":\"22.11.0\",\"requested_version\":\"22\",\"installed\":true,\"active\":true,\"source\":{{\"type\":\"mise.toml\",\"path\":\"{p}/mise.toml\"}}}}],\"go\":[{{\"version\":\"1.22.1\",\"requested_version\":\"latest\",\"installed\":false,\"active\":false,\"source\":{{\"type\":\"mise.toml\",\"path\":\"{p}/mise.toml\"}}}}]}}",
-                        p = project
-                    );
+                    let v = json!({
+                        "node": [{"version": "22.11.0", "requested_version": "22", "installed": true, "active": true, "source": {"type": "mise.toml", "path": proj_toml}}],
+                        "go": [{"version": "1.22.1", "requested_version": "latest", "installed": false, "active": false, "source": {"type": "mise.toml", "path": proj_toml}}],
+                    });
+                    println!("{v}");
                 } else {
-                    println!(
-                        "[{{\"name\":\"node\",\"version\":\"22.11.0\",\"installed\":true,\"source\":\"{p}/mise.toml\",\"requested_version\":\"22\"}},{{\"name\":\"go\",\"version\":\"1.22.1\",\"installed\":false,\"source\":\"{p}/mise.toml\",\"requested_version\":\"latest\"}}]",
-                        p = project
-                    );
+                    let v = json!([
+                        {"name": "node", "version": "22.11.0", "installed": true, "source": proj_toml, "requested_version": "22"},
+                        {"name": "go", "version": "1.22.1", "installed": false, "source": proj_toml, "requested_version": "latest"},
+                    ]);
+                    println!("{v}");
                 }
             } else {
                 println!("node 22.11.0");
@@ -82,10 +100,9 @@ fn main() -> std::process::ExitCode {
             }
         }
         "ls-remote" => {
-            println!("22.11.0");
-            println!("22.10.0");
-            println!("22.9.0");
-            println!("20.15.0");
+            for v in ["22.11.0", "22.10.0", "22.9.0", "20.15.0"] {
+                println!("{v}");
+            }
         }
         "install" | "use" => {
             if let Some(arg) = args.get(1) {
@@ -93,7 +110,11 @@ fn main() -> std::process::ExitCode {
             }
         }
         "tasks" => {
-            println!("[{{\"name\":\"build\",\"description\":\"build it\"}},{{\"name\":\"test\",\"description\":\"run tests\"}}]");
+            let v = json!([
+                {"name": "build", "description": "build it"},
+                {"name": "test", "description": "run tests"},
+            ]);
+            println!("{v}");
         }
         "run" => {
             if args.get(1).map(|s| s.as_str()) == Some("fail") {
@@ -105,7 +126,8 @@ fn main() -> std::process::ExitCode {
         }
         "settings" => {
             if args.iter().any(|a| a == "-J") {
-                println!("{{\"env_file\":true,\"always_keep_download\":false,\"jobs\":4}}");
+                let v = json!({"env_file": true, "always_keep_download": false, "jobs": 4});
+                println!("{v}");
             } else if args.get(1).is_some() && (args[1] == "set" || args[1] == "unset") {
                 println!("settings ok");
             } else {
@@ -114,7 +136,8 @@ fn main() -> std::process::ExitCode {
         }
         "plugins" => {
             if args.iter().any(|a| a == "-J") {
-                println!("[{{\"name\":\"node\",\"installed\":true}},{{\"name\":\"go\",\"installed\":true}}]");
+                let v = json!([{"name": "node", "installed": true}, {"name": "go", "installed": true}]);
+                println!("{v}");
             } else {
                 println!("node");
                 println!("go");
