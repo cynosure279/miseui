@@ -1,28 +1,27 @@
 name: MiseUI CI
 
-# 适配性增加：仅当 gui/server 变更时运行，不拖慢 mise 主体 CI。
 "on":
   push:
     paths: ["gui/**", "server/**"]
     branches: [main, master, develop]
   pull_request:
     paths: ["gui/**", "server/**"]
+  workflow_dispatch: {}
 
 concurrency:
-  group: ${ github.workflow }-${ github.ref }
+  group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
 env:
   CARGO_TERM_COLOR: always
 
 jobs:
-  # 中间件：独立 cargo 工程（不加入 mise workspace），单独构建测试
   miseui-server:
     strategy:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
-    runs-on: ${ matrix.os }
+    runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@master
@@ -31,7 +30,7 @@ jobs:
           components: clippy
       - uses: Swatinem/rust-cache@v2
         with:
-          key: miseui-server-${ matrix.os }
+          key: miseui-server-${{ matrix.os }}
       - name: Install Linux deps (ubuntu)
         if: matrix.os == 'ubuntu-latest'
         run: |
@@ -42,7 +41,6 @@ jobs:
       - name: cargo clippy (server)
         run: cargo clippy --manifest-path server/Cargo.toml --all-targets -- -D warnings
 
-  # 前端：bun 工具链（与宿主仓库一致），typecheck + 构建
   miseui-web:
     runs-on: ubuntu-latest
     steps:
@@ -56,11 +54,10 @@ jobs:
       - name: typecheck / lint
         working-directory: gui
         run: bun run typecheck
-      - name: build web static
+      - name: build web
         working-directory: gui
         run: bun run build
 
-  # 集成：前端产物 + server（fake-mise）全链路
   miseui-integration:
     runs-on: ubuntu-latest
     steps:
@@ -78,7 +75,7 @@ jobs:
       - name: build web
         run: bun run build
         working-directory: gui
-  # Tauri 壳冒烟：确保桌面前端(React→dist→deb)在 CI 可构建
+
   miseui-desktop:
     runs-on: ubuntu-latest
     steps:
